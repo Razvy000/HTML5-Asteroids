@@ -1,7 +1,12 @@
 // Canvas Asteroids
 //
 // Copyright (c) 2010 Doug McInnes
-//
+// modified 2017 Razvan AIception
+
+var img = new Image;
+var faces_data = []
+var token = "YOUR_TOKEN_HERE"
+var image_url = "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Albert_Einstein_and_Charlie_Chaplin_-_1931.jpg/800px-Albert_Einstein_and_Charlie_Chaplin_-_1931.jpg";
 
 KEY_CODES = {
   32: 'space',
@@ -244,6 +249,15 @@ Sprite = function () {
 
     this.context.closePath();
     this.context.stroke();
+    if(this.name == 'asteroid'){
+      if(!this.face){
+        this.face = faces_data[Math.floor(Math.random()*faces_data.length)];
+      }
+      
+      src_width = this.face[2] - this.face[0]
+      src_height = this.face[3] - this.face[1]
+      this.context.drawImage(img, this.face[0], this.face[1], src_width, src_height, -10, -10, 20, 20);
+    }
   };
   this.findCollisionCanidates = function () {
     if (!this.visible || !this.currentNode) return [];
@@ -280,7 +294,8 @@ Sprite = function () {
       px = trans[i*2];
       py = trans[i*2 + 1];
       // mozilla doesn't take into account transforms with isPointInPath >:-P
-      if (($.browser.mozilla) ? this.pointInPolygon(px, py) : this.context.isPointInPath(px, py)) {
+      //if (($.browser.mozilla) ? this.pointInPolygon(px, py) : this.context.isPointInPath(px, py)) {
+      if ((false) ? this.pointInPolygon(px, py) : this.context.isPointInPath(px, py)) {
         other.collision(this);
         this.collision(other);
         return;
@@ -1124,6 +1139,30 @@ $(function () {
             };
   })();
 
+  var aiceptionLoop = function(){
+        
+    faces(token, image_url, function(error, success) {
+        if (error) {
+            console.log(error);
+        } else {
+            console.log(JSON.stringify(success, null, 2));
+            faces_data = success.answer.faces;
+
+            // now call the original mainLoop()
+            mainLoop();         
+        }
+    });
+
+    img.onload = function() {
+        canvas.height = img.height;
+        canvas.width = img.width;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(this, 0, 0);
+    };
+
+    img.src = image_url;
+  }
+
   var mainLoop = function () {
     context.clearRect(0, 0, Game.canvasWidth, Game.canvasHeight);
 
@@ -1192,7 +1231,8 @@ $(function () {
     }
   };
 
-  mainLoop();
+  //mainLoop();
+  aiceptionLoop();
 
   $(window).keydown(function (e) {
     switch (KEY_CODES[e.keyCode]) {
